@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public string PolicyNo { get; set; }
-        public string ClaimType { get; set; }
+        public int ClaimType { get; set; }
         public int ClaimStatus { get; set; }
         public DateTime ClaimDate { get; set; }
         public DateTime DeathOfDate { get; set; }
