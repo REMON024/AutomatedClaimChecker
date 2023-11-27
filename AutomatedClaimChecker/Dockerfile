@@ -11,7 +11,7 @@ COPY ["AutomatedClaimChecker/AutomatedClaimChecker.csproj", "AutomatedClaimCheck
 COPY ["AzureCognitiveService/AzureCognitiveService.csproj", "AzureCognitiveService/"]
 RUN dotnet restore "AutomatedClaimChecker/AutomatedClaimChecker.csproj"
 COPY . .
-WORKDIR "AutomatedClaimChecker"
+WORKDIR "/src/AutomatedClaimChecker"
 RUN dotnet build "AutomatedClaimChecker.csproj" -c Release -o /app/build
 
 FROM build AS publish
