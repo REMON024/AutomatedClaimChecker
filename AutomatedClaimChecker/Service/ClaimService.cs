@@ -62,6 +62,15 @@ namespace AutomatedClaimChecker.Service
                 await this.context.SaveChangesAsync();
             }
 
+            else
+            {
+                claim.CauseOfDeath = submitClaim.CauseOfDeath;
+                claim.DeathOfDate = submitClaim.DeathOfDate;
+                this.context.ClaimInfos.Update(claim);
+                this.context.SaveChanges();
+
+            }
+
             var documet = await this.context.ClaimDocuments.Where(c => c.ClaimInfoId == claim.Id).ToListAsync();
 
             if (claim.Id > 0)
