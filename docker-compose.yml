@@ -1,15 +1,6 @@
 version: '3.7'
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "5000:80"
-    depends_on:
-      - sql-server
-
   sql-server:
     image: mcr.microsoft.com/mssql/server
     environment:
