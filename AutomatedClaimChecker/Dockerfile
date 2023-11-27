@@ -15,7 +15,7 @@ WORKDIR "/src/AutomatedClaimChecker"
 RUN dotnet build "AutomatedClaimChecker.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "AutomatedClaimChecker.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AutomatedClaimChecker.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
