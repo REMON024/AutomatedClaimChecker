@@ -4,32 +4,31 @@
     {
         DeathCertificate=1,
         AgeOfProof=2,
-
+        ClaimApplication=3
     }
 
 
 
     public enum PolicyStatus
     {
-        submit = 1,
-        pending = 2,
-
+        NonClaimable = 1,
+        Claim = 2,
+        Matured=3
     }
 
     public enum ClaimStatus
     {
         submit = 1,
         pending = 2,
-        verified = 3,
+        Complete = 3,
 
     }
 
     public enum DocumentStatus
     {
         submit = 1,
-        pending = 2,
-        verified = 3,
-        fail = 4,
+        verified = 2,
+        fail = 3,
 
 
     }

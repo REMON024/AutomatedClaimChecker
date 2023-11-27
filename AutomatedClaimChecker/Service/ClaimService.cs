@@ -1,6 +1,7 @@
 ﻿using AutomatedClaimChecker.Context;
 using AutomatedClaimChecker.Enum;
 using AutomatedClaimChecker.Model;
+using AutomatedClaimChecker.Model.Vm;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutomatedClaimChecker.Service
@@ -138,15 +139,28 @@ namespace AutomatedClaimChecker.Service
 
         private async Task<bool> VerifyDeathCertificate(int documentType, string path, ClaimInfo claimInfo)
         {
-            var data = new { Name = "remon", DeathOfBirth = "1996-04-14", CauseOfDeath = "cancer" };
+            var data = new { Name = "remon", DeathOfBirth = "1996-04-14", CauseOfDeath = "accident", accuracy = 0.0 };
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
-            if (claimInfo.DeathOfDate == Convert.ToDateTime(data.DeathOfBirth) && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name)
+            var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
+            if (claimInfo.DeathOfDate.Date == Convert.ToDateTime(data.DeathOfBirth).Date && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name)
             {
                 return true;
             }
 
             return false;
+        }
+
+
+        public async Task<ClaimApplication> GetClaimFormData(string path)
+        {
+            return await ConvertImageToText(path);
+        }
+
+
+        private async Task<ClaimApplication> ConvertImageToText(string path)
+        {
+            return new ClaimApplication();
         }
 
 
@@ -156,7 +170,7 @@ namespace AutomatedClaimChecker.Service
     {
         Task<SubmitClaim> SaveOrUpdate(SubmitClaim submitClaim);
 
-
+        Task<ClaimApplication> GetClaimFormData(string path);
 
         Task<SubmitClaim> GetClaimById(int Id);
         Task<SubmitClaim> GetClaimByPolicyNo(string policyNo);

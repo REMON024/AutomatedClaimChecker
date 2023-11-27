@@ -4,6 +4,7 @@ using AutomatedClaimChecker.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutomatedClaimChecker.Migrations
 {
     [DbContext(typeof(AutoClaimContext))]
-    partial class AutoClaimContextModelSnapshot : ModelSnapshot
+    [Migration("20231127170918_fix table")]
+    partial class fixtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

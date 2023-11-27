@@ -11,7 +11,7 @@
         public int ClaimType { get; set; }
         public DateTime DeathOfDate { get; set; }
         public string CauseOfDeath { get; set; }
-        public int Status { get; set; }
+        public int Status { get; set; } = 0;
 
         public List<documentList> lstDocument { get; set; }
 

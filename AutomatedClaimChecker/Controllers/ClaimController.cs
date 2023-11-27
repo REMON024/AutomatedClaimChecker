@@ -28,7 +28,7 @@ namespace AutomatedClaimChecker.Controllers
             return Ok(data);
         }
 
-        [HttpPost("uploadDocument")]
+        [HttpPost("UploadDocument")]
         public async Task<IActionResult> SubmitFormDocument(IFormFile file)
         {
             string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "uploads");
@@ -46,6 +46,34 @@ namespace AutomatedClaimChecker.Controllers
                 }
 
                 return Ok(new { FilePath = filePath });
+
+            }
+
+
+            return NotFound();
+        }
+
+
+        [HttpPost("UploadFormDocument")]
+        public async Task<IActionResult> UploadFormDocument(IFormFile file)
+        {
+            string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "uploads");
+            if (file.Length > 0)
+            {
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+
+                }
+                string filePath = Path.Combine(uploads, file.FileName);
+                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+
+
+                var data = await this.claimService.GetClaimFormData(filePath);
+                return Ok(data);
 
             }
 

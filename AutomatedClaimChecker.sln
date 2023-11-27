@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomatedClaimChecker", "AutomatedClaimChecker\AutomatedClaimChecker.csproj", "{20E35D62-0A97-4B62-8B95-0AA188400B81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomatedClaimChecker", "AutomatedClaimChecker\AutomatedClaimChecker.csproj", "{20E35D62-0A97-4B62-8B95-0AA188400B81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureCognitiveService", "AzureCognitiveService\AzureCognitiveService.csproj", "{65F8FFCF-21A1-4A81-8BFA-543EF10F2032}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{20E35D62-0A97-4B62-8B95-0AA188400B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20E35D62-0A97-4B62-8B95-0AA188400B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20E35D62-0A97-4B62-8B95-0AA188400B81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65F8FFCF-21A1-4A81-8BFA-543EF10F2032}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65F8FFCF-21A1-4A81-8BFA-543EF10F2032}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65F8FFCF-21A1-4A81-8BFA-543EF10F2032}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65F8FFCF-21A1-4A81-8BFA-543EF10F2032}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
