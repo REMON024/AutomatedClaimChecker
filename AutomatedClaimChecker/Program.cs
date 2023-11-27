@@ -35,7 +35,7 @@ namespace AutomatedClaimChecker
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
+            app.UseStaticFiles();
 
             app.MapControllers();
 
