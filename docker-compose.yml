@@ -7,3 +7,5 @@ services:
       dockerfile: AutomatedClaimChecker/Dockerfile
     ports:
       - "5000:80"
+    volumes:
+      - ./uploads:/app/uploads
