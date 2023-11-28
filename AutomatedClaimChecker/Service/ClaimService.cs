@@ -2,6 +2,8 @@
 using AutomatedClaimChecker.Enum;
 using AutomatedClaimChecker.Model;
 using AutomatedClaimChecker.Model.Vm;
+using AzureCognitiveService.DocumentSimilarity;
+using AzureCognitiveService.ImageToText;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -10,9 +12,11 @@ namespace AutomatedClaimChecker.Service
     public class ClaimService : IClaimService
     {
         public AutoClaimContext context;
-        public ClaimService(AutoClaimContext context)
+        private IHostEnvironment _hostingEnvironment;
+        public ClaimService(AutoClaimContext context, IHostEnvironment hostingEnvironment)
         {
             this.context = context;
+            _hostingEnvironment = hostingEnvironment;
         }
         public Task<SubmitClaim> GetClaimById(int Id)
         {
@@ -177,16 +181,49 @@ namespace AutomatedClaimChecker.Service
             return (false, "Invalid document");
         }
 
-
+        private string RawStringToDateString(string text)
+        {
+            string[] a = text.Split(" ");
+            string date = a[0] + a[1];
+            string month = a[2] + a[3];
+            string year = a[4] + a[5] + a[5] + a[6];
+            return date + " " + month + " " + year;
+        }
         private async Task<(bool, string)> VerifyDeathCertificate(int documentType, string path, ClaimInfo claimInfo)
         {
             var data = new DeathCertificateData();
+
+            CognitiveImageToText cognitiveImageToText = new CognitiveImageToText();
+            var keyGraph = await cognitiveImageToText.ImageToText(path);
+            ClaimApplication claimApplication = new ClaimApplication();
+
+            claimApplication.PolicyNo = keyGraph.Where(x => x.key.Contains("Policy Number(s)") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
+            claimApplication.DateOfDeath = keyGraph.Where(x => x.key.Contains("Date of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
+            claimApplication.CauseOfDeath = keyGraph.Where(x => x.key.Contains("Cause of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
+            claimApplication.FirstName = keyGraph.Where(x => x.key.Contains("First Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
+            claimApplication.LastName = keyGraph.Where(x => x.key.Contains("Last Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
+
+
+            data.CauseOfDeath = claimApplication.CauseOfDeath;
+            data.DeathOfBirth = RawStringToDateString(claimApplication.DateOfDeath);
+            data.Name = claimApplication.FirstName+claimApplication.LastName;
+
+            CognitiveSimilarity sim = new CognitiveSimilarity();
+            string root = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot");
+            var result = sim.SubmitDC("", "", root + "/DC Vector.xlsx", outputImage: path);
+            data.accuracy = result.ratio;
+
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
             var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
-            if (claimInfo.DeathOfDate.Date == Convert.ToDateTime(data.DeathOfBirth).Date
-                && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name
-                && documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+
+            if(documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+            {
+                return (false, result.remakrs);
+            }
+
+            if (claimInfo.DeathOfDate.Date.ToString("dd MM yyyy") == data.DeathOfBirth
+                && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name)
             {
                 return (true, "");
 
@@ -200,11 +237,27 @@ namespace AutomatedClaimChecker.Service
         private async Task<(bool, string)> VerifyNID(int documentType, string path, ClaimInfo claimInfo)
         {
             var data = new NIDData();
+
+            CognitiveImageToText cognitiveImageToText = new CognitiveImageToText();
+            var text = await cognitiveImageToText.GetRawTextFromImg(path);
+
+            CognitiveSimilarity sim = new CognitiveSimilarity();
+            string root = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot");
+            var result = sim.SubmitNid("", "", root + "/NID Vector.xlsx", outputImage: path);
+            data.accuracy = result.ratio;
+
+
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
             var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
-            if (customer.DOB?.Date == Convert.ToDateTime(data.Dob).Date && customer.Name == data.Name
-                && documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+
+            if(documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+            {
+                return (false, result.remakrs);
+            }
+
+            if (text.Contains(customer.DOB?.Date.ToString("dd MMM yyyy")) && text.Contains(customer.Name))
+                 
             {
                 return (true, "");
             }

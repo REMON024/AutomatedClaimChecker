@@ -4,7 +4,7 @@
     {
         public string Name { get; set; }
         public string DeathOfBirth { get; set; }
-        public decimal accuracy { get; set; }
+        public double accuracy { get; set; }
         public string CauseOfDeath { get; set; }
 
     }

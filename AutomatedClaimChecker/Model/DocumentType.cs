@@ -4,6 +4,6 @@
     {
         public int Id { get; set; }
         public string DocumentName { get; set; }
-        public decimal RequiredDocumentAccuracy { get; set; }
+        public double RequiredDocumentAccuracy { get; set; }
     }
 }
