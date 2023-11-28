@@ -21,6 +21,8 @@
         submit = 1,
         pending = 2,
         Complete = 3,
+        Reject = 3,
+
 
     }
 

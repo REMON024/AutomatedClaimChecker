@@ -24,10 +24,10 @@ namespace AutomatedClaimChecker.Controllers
 
         }
 
-        [HttpGet("SubmitForm")]
-        public IActionResult SubmitForm(SubmitClaim submitClaim)
+        [HttpPost("SubmitForm")]
+        public async Task<IActionResult> SubmitForm(SubmitClaim submitClaim)
         {
-            var data = this.claimService.SaveOrUpdate(submitClaim);
+            var data = await this.claimService.SaveOrUpdate(submitClaim);
             return Ok(data);
         }
 
@@ -42,6 +42,8 @@ namespace AutomatedClaimChecker.Controllers
                     Directory.CreateDirectory(uploads);
 
                 }
+
+
                 string filePath = Path.Combine(uploads, file.FileName);
                 using (Stream fileStream = new FileStream(filePath, FileMode.Create))
                 {
@@ -54,11 +56,11 @@ namespace AutomatedClaimChecker.Controllers
 
                 claimApplication.PolicyNo = keyGraph.Where(x => x.key.Contains("Policy Number(s)") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
                 claimApplication.DateOfDeath = keyGraph.Where(x => x.key.Contains("Date of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
-                claimApplication.CauseOfDeath = keyGraph.Where(x => x.key.Contains("Cause of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
-                claimApplication.FirstName = keyGraph.Where(x => x.key.Contains("First Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
-                claimApplication.LastName = keyGraph.Where(x => x.key.Contains("Last Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
+                claimApplication.CauseOfDeath = keyGraph.Where(x => x.key.Contains("Cause of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
+                claimApplication.FirstName = keyGraph.Where(x => x.key.Contains("First Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
+                claimApplication.LastName = keyGraph.Where(x => x.key.Contains("Last Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
 
-                return Ok(new { FilePath = filePath , keyInfo = claimApplication });
+                return Ok(new { FilePath = filePath, keyInfo = claimApplication });
 
             }
             return NotFound();
@@ -82,8 +84,8 @@ namespace AutomatedClaimChecker.Controllers
                 }
 
 
-                var data = await this.claimService.GetClaimFormData(filePath);
-                return Ok(data);
+                //var data = await this.claimService.GetClaimFormData(filePath);
+                return Ok(new { Path = filePath });
 
             }
 
@@ -93,7 +95,8 @@ namespace AutomatedClaimChecker.Controllers
         [HttpGet("GetClaimByPolicy")]
         public async Task<IActionResult> GetClaimInfoes(string policyNo)
         {
-            return Ok();
+            var data = await this.claimService.GetClaimInfo(policyNo);
+            return Ok(data);
         }
 
         [HttpPost("VerifyNID")]
