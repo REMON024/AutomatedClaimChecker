@@ -30,7 +30,10 @@ namespace AutomatedClaimChecker.Service
                         PolicyStatus=policyInfoes.PolicyStatus.ToString(),
                         DOB=customer.DOB.ToString()
                     };
+                    return policyDetailInfoes;
+
                 }
+
             }
 
             return null;

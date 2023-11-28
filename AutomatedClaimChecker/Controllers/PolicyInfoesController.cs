@@ -16,8 +16,15 @@ namespace AutomatedClaimChecker.Controllers
         [HttpGet("CheckPolicy")]
         public async Task<IActionResult> CheckPolicy(string policyNo, string dob, string phoneNumber)
         {
+
             var data = await policyInfoService.GetPolicyInfoes(policyNo);
-            return Ok(new { PolicyNo = data.PolicyNo, Dob = data.DOB, PhoneNumber = data.Mobile });
+            if (data is not null)
+                return Ok(new { PolicyNo = data.PolicyNo, Dob = data.DOB, PhoneNumber = data.Mobile });
+
+
+            return NotFound();
+
+
         }
 
 
