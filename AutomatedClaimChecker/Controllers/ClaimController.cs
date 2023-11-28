@@ -1,6 +1,7 @@
 ﻿using AutomatedClaimChecker.Model;
 using AutomatedClaimChecker.Model.Vm;
 using AutomatedClaimChecker.Service;
+using AzureCognitiveService.DocumentSimilarity;
 using AzureCognitiveService.ImageToText;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -98,5 +99,104 @@ namespace AutomatedClaimChecker.Controllers
             return Ok(data);
         }
 
+        [HttpPost("VerifyNID")]
+        public async Task<IActionResult> VerifyNID(IFormFile file)
+        {
+            if (file.Length > 0)
+            {
+                string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "uploads");
+                string root = Path.Combine(_hostingEnvironmen.ContentRootPath, "wwwroot");
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+
+                }
+                string filePath = Path.Combine(uploads, file.FileName);
+                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+                CognitiveSimilarity cog = new CognitiveSimilarity();
+
+                var result = cog.SubmitNid("", "", root+"/NID Vector.xlsx",  outputImage: filePath);
+
+                return Ok(new {success = result.success , remarks = result.remakrs , ratio = result.ratio});
+            }
+            return BadRequest();    
+                
+        }
+
+        [HttpPost("VerifyDC")]
+        public async Task<IActionResult> VerifyDC(IFormFile file)
+        {
+            if (file.Length > 0)
+            {
+                string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "uploads");
+                string root = Path.Combine(_hostingEnvironmen.ContentRootPath, "wwwroot");
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+
+                }
+                string filePath = Path.Combine(uploads, file.FileName);
+                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+                CognitiveSimilarity cog = new CognitiveSimilarity();
+
+                var result = cog.SubmitDC("", "", root + "/DC Vector.xlsx", outputImage: filePath);
+
+                return Ok(new { success = result.success, remarks = result.remakrs, ratio = result.ratio });
+            }
+            return BadRequest();
+
+        }
+
+        [HttpGet("TraningDC")]
+        public IActionResult TraningDC()
+        {
+            string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "wwwroot");
+
+            CognitiveSimilarity cognitiveSimilarity = new CognitiveSimilarity();
+            List<string> ImgPath = new List<string>();
+            for(int i = 1; i <= 3; i++)
+            {
+                string path = uploads+"/NotDOC/NOTDOC"+i+".jpg";
+                ImgPath.Add(path);
+            }
+            for (int i = 1; i <= 3; i++)
+            {
+                string path = uploads + "/DOC/DC" + i + ".jpeg";
+                ImgPath.Add(path);
+            }
+
+            var result = cognitiveSimilarity.TrainingDOC(ImgPath);
+
+            return Ok(new { matricBase64 = result.matricExcelBase64});
+        }
+
+        [HttpGet("TraningNID")]
+        public IActionResult TraningNID()
+        {
+            string uploads = Path.Combine(_hostingEnvironmen.ContentRootPath, "wwwroot");
+
+            CognitiveSimilarity cognitiveSimilarity = new CognitiveSimilarity();
+            List<string> ImgPath = new List<string>();
+            for (int i = 1; i <= 3; i++)
+            {
+                string path = uploads + "/NotNID/notnid" + i + ".jpeg";
+                ImgPath.Add(path);
+            }
+            for (int i = 1; i <= 4; i++)
+            {
+                string path = uploads + "/NID/nid" + i + ".jpeg";
+                ImgPath.Add(path);
+            }
+
+            var result = cognitiveSimilarity.TrainingNID(ImgPath);
+
+            return Ok(new { matricBase64 = result.matricExcelBase64 });
+        }
     }
 }

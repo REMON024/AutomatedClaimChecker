@@ -29,7 +29,6 @@ namespace AzureCognitiveService.ImageToText
             }
             return keyValues;
         }
-
         private async Task<Dictionary<string, string>> ReadTextFromImage(ComputerVisionClient client, string imagePath)
         {
             var ocrResult = await client.RecognizeTextInStreamAsync(GetImageStream(imagePath), TextRecognitionMode.Handwritten);
@@ -77,6 +76,36 @@ namespace AzureCognitiveService.ImageToText
             memoryStream.Seek(0, SeekOrigin.Begin);
             return memoryStream;
         }
+        public async Task<string> GetRawTextFromImg(string imagePath)
+        {
+            var computerVisionClient = new ComputerVisionClient(new ApiKeyServiceClientCredentials(Keys.Key))
+            {
+                Endpoint = Keys.Endpoint
+            };
+            string text = await ReadTextFromImageRaw(computerVisionClient, imagePath);
+            return text;
+        }
+        private async Task<string> ReadTextFromImageRaw(ComputerVisionClient client, string imagePath)
+        {
+            var ocrResult = await client.RecognizeTextInStreamAsync(GetImageStream(imagePath), TextRecognitionMode.Handwritten);
+            Thread.Sleep(1000);
+            var extractedText = await CongitiveApiCallRaw(ocrResult.OperationLocation, Keys.Key);
+            return extractedText;
+        }
+        private async Task<string> CongitiveApiCallRaw(string uri, string subsKey)
+        {
+            var client = new RestClient(uri);
+            client.Timeout = -1;
+            var request = new RestRequest(Method.GET);
+            request.AddHeader("Ocp-Apim-Subscription-Key", subsKey);
+            IRestResponse response = await client.ExecuteAsync(request);
+            var result = JsonConvert.DeserializeObject<Root>(response.Content);
+            var lines = result.recognitionResult.lines.Select(x => x.text).ToList();
+            string text = string.Join(" ", lines);
+            return text;
+
+        }
+        
 
     }
 }
