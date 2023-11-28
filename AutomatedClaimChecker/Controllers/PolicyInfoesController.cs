@@ -33,7 +33,7 @@ namespace AutomatedClaimChecker.Controllers
         {
             if (string.IsNullOrEmpty(otp) || !otp.Equals("123456"))
             {
-                return Unauthorized("Invalid Otp or Policy No");
+                return Unauthorized("Invalid Otp.");
             }
             var data = await policyInfoService.GetPolicyInfoes(policyNo);
 
