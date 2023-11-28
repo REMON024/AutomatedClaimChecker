@@ -50,5 +50,15 @@ public class KeyValue
     public string key { get; set; }
     public string value { get; set; }
 }
+public class TrainDataSet
+{
+    public string Word { set; get; }
+    public double Vector { set; get; }
+}
+public class CosineSimilarity
+{
+    public int index { set; get; }
+    public double score { set; get; }
+}
 
 
