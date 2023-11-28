@@ -4,6 +4,7 @@ using AutomatedClaimChecker.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutomatedClaimChecker.Migrations
 {
     [DbContext(typeof(AutoClaimContext))]
-    partial class AutoClaimContextModelSnapshot : ModelSnapshot
+    [Migration("20231128190339_aaaaa")]
+    partial class aaaaa
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,8 +132,8 @@ namespace AutomatedClaimChecker.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("RequiredDocumentAccuracy")
-                        .HasColumnType("float");
+                    b.Property<decimal>("RequiredDocumentAccuracy")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
