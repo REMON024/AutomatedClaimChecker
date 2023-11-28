@@ -26,7 +26,7 @@ namespace AutomatedClaimChecker.Controllers
         [HttpPost("SubmitForm")]
         public async Task<IActionResult> SubmitForm(SubmitClaim submitClaim)
         {
-            var data =await this.claimService.SaveOrUpdate(submitClaim);
+            var data = await this.claimService.SaveOrUpdate(submitClaim);
             return Ok(data);
         }
 
@@ -41,6 +41,8 @@ namespace AutomatedClaimChecker.Controllers
                     Directory.CreateDirectory(uploads);
 
                 }
+
+                
                 string filePath = Path.Combine(uploads, file.FileName);
                 using (Stream fileStream = new FileStream(filePath, FileMode.Create))
                 {
@@ -57,7 +59,7 @@ namespace AutomatedClaimChecker.Controllers
                 claimApplication.FirstName = keyGraph.Where(x => x.key.Contains("First Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
                 claimApplication.LastName = keyGraph.Where(x => x.key.Contains("Last Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
 
-                return Ok(new { FilePath = filePath , keyInfo = claimApplication });
+                return Ok(new { FilePath = filePath, keyInfo = claimApplication });
 
             }
             return NotFound();

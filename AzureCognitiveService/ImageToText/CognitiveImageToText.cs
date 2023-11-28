@@ -27,7 +27,7 @@ namespace AzureCognitiveService.ImageToText
                 };
                 keyValues.Add(model);
             }
-            return keyValues;   
+            return keyValues;
         }
 
         private async Task<Dictionary<string, string>> ReadTextFromImage(ComputerVisionClient client, string imagePath)
@@ -48,7 +48,7 @@ namespace AzureCognitiveService.ImageToText
             var result = JsonConvert.DeserializeObject<Root>(response.Content);
             var lines = result.recognitionResult.lines.Select(x => x.text).ToList();
             bool benificary = false;
-            for (int i = 0; i < lines.Count(); i++)
+            for (int i = 0; i < lines.Count() - 1; i++)
             {
                 if (lines[i].Contains("Part 2"))
                 {
