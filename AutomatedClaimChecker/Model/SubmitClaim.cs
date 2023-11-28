@@ -23,6 +23,7 @@
         public int DocumentType { get; set; }
         public int Status { get; set; }
 
+        public string? Remarks { get; set; }
 
     }
 

@@ -9,6 +9,8 @@
         public int DocumentStatus { get; set; }
         public int? Issure { get; set; }
         public decimal? DocumentAccuracy { get; set; }
+        public string? Remarks { get; set; }
+
 
     }
 }

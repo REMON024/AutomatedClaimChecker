@@ -20,13 +20,14 @@ namespace AutomatedClaimChecker.Service
 
         public async Task<SubmitClaim> GetClaimByPolicyNo(string policyNo)
         {
-            var policy = await this.context.PolicyInfos.Where(x => x.PolicyNo == policyNo).FirstOrDefaultAsync();
-            var claim = await this.context.ClaimInfos.Where(x => x.PolicyNo == policyNo).FirstOrDefaultAsync();
-            var document = await this.context.ClaimDocuments.Where(x => x.ClaimInfoId == claim.Id).Select(c => new documentList()
+            var policy = await this.context.PolicyInfos.AsNoTracking().Where(x => x.PolicyNo == policyNo).FirstOrDefaultAsync();
+            var claim = await this.context.ClaimInfos.AsNoTracking().Where(x => x.PolicyNo == policyNo).FirstOrDefaultAsync();
+            var document = await this.context.ClaimDocuments.AsNoTracking().Where(x => x.ClaimInfoId == claim.Id).Select(c => new documentList()
             {
                 DocumentPath = c.DocumentPath,
                 DocumentType = c.DocumentType,
-                Status = c.DocumentStatus
+                Status = c.DocumentStatus,
+                Remarks = c.Remarks
             }).ToListAsync();
 
 
@@ -46,7 +47,7 @@ namespace AutomatedClaimChecker.Service
 
         public async Task<SubmitClaim> SaveOrUpdate(SubmitClaim submitClaim)
         {
-            var claim = await this.context.ClaimInfos.Where(x => x.PolicyNo == submitClaim.PolicyNo).FirstOrDefaultAsync();
+            var claim = this.context.ClaimInfos.AsNoTracking().Where(x => x.PolicyNo == submitClaim.PolicyNo).FirstOrDefault();
             if (claim is null)
             {
                 claim = new ClaimInfo()
@@ -54,25 +55,26 @@ namespace AutomatedClaimChecker.Service
                     CauseOfDeath = submitClaim.CauseOfDeath,
                     ClaimDate = DateTime.Now,
                     ClaimStatus = (int)ClaimStatus.submit,
-                    ClaimType = submitClaim.ClaimType,
+                    ClaimType = 1,
                     DeathOfDate = submitClaim.DeathOfDate,
                     PolicyNo = submitClaim.PolicyNo
                 };
 
-                await this.context.ClaimInfos.AddAsync(claim);
-                await this.context.SaveChangesAsync();
+                this.context.ClaimInfos.Add(claim);
+                this.context.SaveChanges();
             }
 
             else
             {
                 claim.CauseOfDeath = submitClaim.CauseOfDeath;
                 claim.DeathOfDate = submitClaim.DeathOfDate;
+                claim.ClaimStatus = (int)ClaimStatus.submit;
                 this.context.ClaimInfos.Update(claim);
                 this.context.SaveChanges();
 
             }
 
-            var documet = await this.context.ClaimDocuments.Where(c => c.ClaimInfoId == claim.Id).ToListAsync();
+            var documet = this.context.ClaimDocuments.Where(c => c.ClaimInfoId == claim.Id).ToList();
 
             if (claim.Id > 0)
             {
@@ -91,27 +93,64 @@ namespace AutomatedClaimChecker.Service
                         DocumentStatus = (int)ClaimStatus.submit,
                         DocumentType = item.DocumentType
                     };
-
+                    documet.Add(res);
                 }
+                this.context.ClaimDocuments.AddRange(documet);
 
-                await this.context.ClaimDocuments.AddRangeAsync(documet);
-                await this.context.SaveChangesAsync();
+                this.context.SaveChanges();
 
+
+
+                /// Document auto verification 
+
+                claim.ClaimStatus = (int)ClaimStatus.pending;
                 foreach (var item in documet)
                 {
-                    var response = await CheckBasicValidation(item.DocumentType, item.DocumentPath, claim);
-                    if (response)
+                    item.DocumentStatus = (int)ClaimStatus.pending;
+                    //var response = await CheckBasicValidation(item.DocumentType, item.DocumentPath, claim);
+                    var response = (false, "aaaa");
+
+
+                    if (response.Item1)
                     {
+                        item.DocumentStatus = (int)ClaimStatus.Complete;
+
+                    }
+                    else
+                    {
+                        item.DocumentStatus = (int)ClaimStatus.Reject;
+                        item.Remarks = response.Item2;
                     }
                 }
 
+
+                var countComplete = documet.Where(c => c.DocumentStatus == (int)ClaimStatus.Complete).Count();
+                var countReject = documet.Where(c => c.DocumentStatus == (int)ClaimStatus.Reject).Count();
+
+                if (countComplete == documet.Count)
+                {
+                    claim.ClaimStatus = (int)ClaimStatus.Complete;
+
+                }
+
+                else if (countReject == documet.Count)
+                {
+                    claim.ClaimStatus = (int)ClaimStatus.Reject;
+
+                }
+
+                else
+                {
+                    claim.ClaimStatus = (int)ClaimStatus.pending;
+
+                }
+
+
+                this.context.ClaimInfos.Update(claim);
+
+                this.context.ClaimDocuments.UpdateRange(documet);
+                this.context.SaveChanges();
             }
-
-
-
-            ///Write the document verification logic
-
-
 
             var info = await GetClaimByPolicyNo(claim.PolicyNo);
 

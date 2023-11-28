@@ -21,10 +21,10 @@ namespace AutomatedClaimChecker.Controllers
 
         }
 
-        [HttpGet("SubmitForm")]
-        public IActionResult SubmitForm(SubmitClaim submitClaim)
+        [HttpPost("SubmitForm")]
+        public async Task<IActionResult> SubmitForm(SubmitClaim submitClaim)
         {
-            var data = this.claimService.SaveOrUpdate(submitClaim);
+            var data =await this.claimService.SaveOrUpdate(submitClaim);
             return Ok(data);
         }
 
