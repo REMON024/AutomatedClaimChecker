@@ -14,7 +14,12 @@ namespace AutomatedClaimChecker
           options.UseSqlServer(builder.Configuration.GetConnectionString("autoclaim")));
             // Add services to the container.
 
-
+            builder.Services.AddCors(o => o.AddPolicy("cors", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
             builder.Services.AddTransient<IClaimService, ClaimService>();
             builder.Services.AddTransient<IPolicyInfoService, PolicyInfoService>();
             
@@ -32,7 +37,7 @@ namespace AutomatedClaimChecker
             app.UseSwagger();
                 app.UseSwaggerUI();
             //}
-
+            app.UseCors("cors");
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
