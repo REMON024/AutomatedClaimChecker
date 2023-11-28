@@ -2,9 +2,9 @@
 {
     public enum DocumentType
     {
-        DeathCertificate=1,
-        AgeOfProof=2,
-        ClaimApplication=3
+        DeathCertificate=2,
+        AgeOfProof=3,
+        ClaimApplication=4
     }
 
 
@@ -21,7 +21,7 @@
         submit = 1,
         pending = 2,
         Complete = 3,
-        Reject = 3,
+        Reject = 4,
 
 
     }

@@ -112,8 +112,8 @@ namespace AutomatedClaimChecker.Service
                 foreach (var item in documet)
                 {
                     item.DocumentStatus = (int)ClaimStatus.pending;
-                    //var response = await CheckBasicValidation(item.DocumentType, item.DocumentPath, claim);
-                    var response = (false, "aaaa");
+                    var response = await CheckBasicValidation(item.DocumentType, item.DocumentPath, claim);
+                   // var response = (false, "aaaa");
 
 
                     if (response.Item1)
@@ -168,13 +168,13 @@ namespace AutomatedClaimChecker.Service
 
             if (documentType == (int)Enum.DocumentType.DeathCertificate)
             {
-                return await VerifyDeathCertificate(documentType, path, claimInfo);
+                return await VerifyDeathCertificate(documentType, path, claimInfo.PolicyNo);
             }
 
             else if (documentType == (int)Enum.DocumentType.AgeOfProof)
             {
 
-                return await VerifyNID(documentType, path, claimInfo);
+                return await VerifyNID(documentType, path, claimInfo.PolicyNo);
             }
 
 
@@ -189,52 +189,42 @@ namespace AutomatedClaimChecker.Service
             string year = a[4] + a[5] + a[5] + a[6];
             return date + " " + month + " " + year;
         }
-        private async Task<(bool, string)> VerifyDeathCertificate(int documentType, string path, ClaimInfo claimInfo)
+        private async Task<(bool, string)> VerifyDeathCertificate(int documentType, string path, string policyNo)
         {
             var data = new DeathCertificateData();
 
             CognitiveImageToText cognitiveImageToText = new CognitiveImageToText();
-            var keyGraph = await cognitiveImageToText.ImageToText(path);
-            ClaimApplication claimApplication = new ClaimApplication();
-
-            claimApplication.PolicyNo = keyGraph.Where(x => x.key.Contains("Policy Number(s)") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
-            claimApplication.DateOfDeath = keyGraph.Where(x => x.key.Contains("Date of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault();
-            claimApplication.CauseOfDeath = keyGraph.Where(x => x.key.Contains("Cause of Death") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
-            claimApplication.FirstName = keyGraph.Where(x => x.key.Contains("First Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
-            claimApplication.LastName = keyGraph.Where(x => x.key.Contains("Last Name") && x.key.Contains("Decessed")).Select(x => x.value).FirstOrDefault()?.TrimStart().TrimEnd();
-
-
-            data.CauseOfDeath = claimApplication.CauseOfDeath;
-            data.DeathOfBirth = RawStringToDateString(claimApplication.DateOfDeath);
-            data.Name = claimApplication.FirstName+claimApplication.LastName;
+           
 
             CognitiveSimilarity sim = new CognitiveSimilarity();
             string root = Path.Combine(_hostingEnvironment.ContentRootPath, "wwwroot");
             var result = sim.SubmitDC("", "", root + "/DC Vector.xlsx", outputImage: path);
             data.accuracy = result.ratio;
-
+            var claimInfo = await this.context.ClaimInfos.Where(c => c.PolicyNo == policyNo).FirstOrDefaultAsync();
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
             var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
 
-            if(documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+            if(documentTypes?.RequiredDocumentAccuracy > data.accuracy)
             {
                 return (false, result.remakrs);
             }
 
-            if (claimInfo.DeathOfDate.Date.ToString("dd MM yyyy") == data.DeathOfBirth
-                && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name)
+            var text = await cognitiveImageToText.GetRawTextFromImg(path);
+
+            if (text.Contains(claimInfo.DeathOfDate.Date.ToString("dd MM yyyy")) 
+                && text.Contains(claimInfo.CauseOfDeath)  && text.Contains(customer.Name))
             {
                 return (true, "");
 
             }
 
-            return (false, string.Format("Invalid {0}", documentTypes.DocumentName));
+            return (false, string.Format("Invalid {0}", documentTypes?.DocumentName));
 
         }
 
 
-        private async Task<(bool, string)> VerifyNID(int documentType, string path, ClaimInfo claimInfo)
+        private async Task<(bool, string)> VerifyNID(int documentType, string path, string policyNo)
         {
             var data = new NIDData();
 
@@ -246,12 +236,12 @@ namespace AutomatedClaimChecker.Service
             var result = sim.SubmitNid("", "", root + "/NID Vector.xlsx", outputImage: path);
             data.accuracy = result.ratio;
 
-
+            var claimInfo = await this.context.ClaimInfos.Where(c => c.PolicyNo == policyNo).FirstOrDefaultAsync();
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
             var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
 
-            if(documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+            if(documentTypes?.RequiredDocumentAccuracy > data.accuracy)
             {
                 return (false, result.remakrs);
             }
