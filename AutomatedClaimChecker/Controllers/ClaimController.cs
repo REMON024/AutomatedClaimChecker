@@ -83,8 +83,8 @@ namespace AutomatedClaimChecker.Controllers
                 }
 
 
-                var data = await this.claimService.GetClaimFormData(filePath);
-                return Ok(data);
+                //var data = await this.claimService.GetClaimFormData(filePath);
+                return Ok(new { Path = filePath });
 
             }
 
@@ -94,7 +94,8 @@ namespace AutomatedClaimChecker.Controllers
         [HttpGet("GetClaimByPolicy")]
         public async Task<IActionResult> GetClaimInfoes(string policyNo)
         {
-            return Ok();
+            var data = await this.claimService.GetClaimInfo(policyNo);
+            return Ok(data);
         }
 
     }

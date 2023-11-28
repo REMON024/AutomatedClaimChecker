@@ -3,6 +3,7 @@ using AutomatedClaimChecker.Enum;
 using AutomatedClaimChecker.Model;
 using AutomatedClaimChecker.Model.Vm;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AutomatedClaimChecker.Service
 {
@@ -158,7 +159,7 @@ namespace AutomatedClaimChecker.Service
         }
 
 
-        private async Task<bool> CheckBasicValidation(int documentType, string path, ClaimInfo claimInfo)
+        private async Task<(bool, string)> CheckBasicValidation(int documentType, string path, ClaimInfo claimInfo)
         {
 
             if (documentType == (int)Enum.DocumentType.DeathCertificate)
@@ -169,37 +170,54 @@ namespace AutomatedClaimChecker.Service
             else if (documentType == (int)Enum.DocumentType.AgeOfProof)
             {
 
+                return await VerifyNID(documentType, path, claimInfo);
             }
 
 
-            return false;
+            return (false, "Invalid document");
         }
 
 
-        private async Task<bool> VerifyDeathCertificate(int documentType, string path, ClaimInfo claimInfo)
+        private async Task<(bool, string)> VerifyDeathCertificate(int documentType, string path, ClaimInfo claimInfo)
         {
-            var data = new { Name = "remon", DeathOfBirth = "1996-04-14", CauseOfDeath = "accident", accuracy = 0.0 };
+            var data = new DeathCertificateData();
             var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
             var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
             var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
-            if (claimInfo.DeathOfDate.Date == Convert.ToDateTime(data.DeathOfBirth).Date && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name)
+            if (claimInfo.DeathOfDate.Date == Convert.ToDateTime(data.DeathOfBirth).Date
+                && claimInfo.CauseOfDeath == data.CauseOfDeath && customer.Name == data.Name
+                && documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
             {
-                return true;
+                return (true, "");
+
             }
 
-            return false;
+            return (false, string.Format("Invalid {0}", documentTypes.DocumentName));
+
         }
 
 
-        public async Task<ClaimApplication> GetClaimFormData(string path)
+        private async Task<(bool, string)> VerifyNID(int documentType, string path, ClaimInfo claimInfo)
         {
-            return await ConvertImageToText(path);
+            var data = new NIDData();
+            var policy = await this.context.PolicyInfos.Where(c => c.PolicyNo == claimInfo.PolicyNo).FirstOrDefaultAsync();
+            var customer = await this.context.Customers.Where(c => c.Id == policy.CustomerId).FirstOrDefaultAsync();
+            var documentTypes = await this.context.DocumentTypes.Where(c => c.Id == documentType).FirstOrDefaultAsync();
+            if (customer.DOB?.Date == Convert.ToDateTime(data.Dob).Date && customer.Name == data.Name
+                && documentTypes?.RequiredDocumentAccuracy <= data.accuracy)
+            {
+                return (true, "");
+            }
+
+            return (false, string.Format("Invalid {0}", documentTypes.DocumentName));
         }
 
 
-        private async Task<ClaimApplication> ConvertImageToText(string path)
+        public async Task<SubmitClaim> GetClaimInfo(string policyNo)
         {
-            return new ClaimApplication();
+            var info = await GetClaimByPolicyNo(policyNo);
+
+            return info;
         }
 
 
@@ -209,7 +227,7 @@ namespace AutomatedClaimChecker.Service
     {
         Task<SubmitClaim> SaveOrUpdate(SubmitClaim submitClaim);
 
-        Task<ClaimApplication> GetClaimFormData(string path);
+        Task<SubmitClaim> GetClaimInfo(string policyNo);
 
         Task<SubmitClaim> GetClaimById(int Id);
         Task<SubmitClaim> GetClaimByPolicyNo(string policyNo);

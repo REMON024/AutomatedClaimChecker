@@ -3,7 +3,7 @@
     public class DocumentType
     {
         public int Id { get; set; }
-        public int DocumentName { get; set; }
-        public int RequiredDocumentAccuracy { get; set; }
+        public string DocumentName { get; set; }
+        public decimal RequiredDocumentAccuracy { get; set; }
     }
 }
